@@ -11,7 +11,7 @@ license = { text = "MIT" }
 dependencies = [
     "urgent2026_sqa @ git+https://github.com/urgent-challenge/urgent2026_challenge_track2",
     "torch",
-    "torchaudio",
+    "torchaudio<2.9",  # must match torch<=2.8 from urgent2026_sqa
     "pandas",
     "matplotlib",
 ]
@@ -40,6 +40,13 @@ select = ["E", "F", "I", "W"]
 quote-style = "double"
 indent-style = "space"
 docstring-code-format = true
+
+[tool.uv]
+index-strategy = "unsafe-best-match"
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu128"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

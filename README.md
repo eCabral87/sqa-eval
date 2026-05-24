@@ -2,7 +2,11 @@
 
 **Speech Quality Assessment** — score your audio with neural MOS metrics and rank enhancement algorithms in minutes, not days.
 
-Backed by the [Uni-VERSA-Ext](https://arxiv.org/abs/2506.12260) framework. No GPU required.
+Backed by the [Uni-VERSA-Ext](https://arxiv.org/abs/2506.12260) framework.
+
+- **GPU** when available, **CPU** otherwise — auto-detected
+- **Cross-platform** — Windows, Linux, macOS (via `uv`)
+- **50 tests** — zero network calls, zero GPU required
 
 ---
 
@@ -16,6 +20,8 @@ uv sync --extra dev
 ```
 
 That's it. You now have `python`, `pytest`, and the full inference stack ready to go.
+
+**Platform note:** `pyproject.toml` registers the [PyTorch CUDA index](https://download.pytorch.org/whl/cu128) alongside PyPI so Linux/Windows users get GPU-capable wheels. On macOS `uv` falls back to PyPI's CPU wheels automatically.
 
 ---
 
@@ -65,6 +71,23 @@ results/denoiser-shootout/
 | `"22metric"` | `vvwangvv/universa-ext_wavlm-base_22metric` | 22 | Yes (for SDR, PESQ, MCD...) |
 
 Or pass any HuggingFace repo ID directly: `Evaluator("org/custom-model")`.
+
+### GPU / CPU
+
+`InferenceEngine` auto-detects CUDA. If it's not available, a warning is printed once and inference falls back to CPU:
+
+```python
+>>> from sqa_eval import InferenceEngine
+>>> engine = InferenceEngine("5metric")
+>>> engine.device
+'cuda'   # or 'cpu' if no GPU
+```
+
+You can force CPU by unsetting the device variable before running:
+
+```bash
+CUDA_VISIBLE_DEVICES="" uv run python my_script.py
+```
 
 ---
 
