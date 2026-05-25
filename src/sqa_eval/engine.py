@@ -7,6 +7,8 @@ from typing import Any
 
 from sqa_eval.metrics import MODEL_ALIASES
 
+TARGET_SR = 16000
+
 
 class InferenceEngine:
     def __init__(self, model: str = "5metric"):
@@ -71,15 +73,27 @@ class InferenceEngine:
             return True
         return False
 
+    @staticmethod
+    def _read_audio(path: str | Path) -> tuple[Any, int]:
+        import soundfile as sf
+        import torch
+
+        data, sr = sf.read(str(path), always_2d=True)
+        data = data.mean(axis=1, keepdims=True).T
+        return torch.from_numpy(data).float(), sr
+
+    @staticmethod
+    def _resample(audio: Any, sr: int, target_sr: int) -> tuple[Any, int]:
+        if sr == target_sr:
+            return audio, sr
+        import torchaudio.functional as F
+
+        return F.resample(audio, sr, target_sr), target_sr
+
     def _get_infer_single(self):
         from urgent2026_sqa.infer import infer_single
 
         return infer_single
-
-    def _get_infer_list(self):
-        from urgent2026_sqa.infer import infer_list
-
-        return infer_list
 
     def predict(
         self, audio_path: str | Path, ref_path: str | Path | None = None
@@ -100,22 +114,21 @@ class InferenceEngine:
                 "Pass a ref_path or use '5metric' for no-reference evaluation."
             )
 
+        audio, sr = self._read_audio(audio_path)
+        audio, sr = self._resample(audio, sr, TARGET_SR)
+
         infer_single = self._get_infer_single()
-        scores = infer_single(self._model, self._config, str(audio_path))
+        scores = infer_single(self._model, self._config, audio, audio_sr=sr)
         return {k: float(v) for k, v in scores.items()}
 
     def _predict_with_ref(self, audio_path: str, ref_path: str) -> dict[str, float]:
         import torch
-        import torchaudio
 
-        test_audio, test_sr = torchaudio.load(audio_path)
-        ref_audio, ref_sr = torchaudio.load(ref_path)
+        test_audio, test_sr = self._read_audio(audio_path)
+        ref_audio, ref_sr = self._read_audio(ref_path)
 
-        target_sr = 16000
-        if test_sr != target_sr:
-            test_audio = torchaudio.functional.resample(test_audio, test_sr, target_sr)
-        if ref_sr != target_sr:
-            ref_audio = torchaudio.functional.resample(ref_audio, ref_sr, target_sr)
+        test_audio, test_sr = self._resample(test_audio, test_sr, TARGET_SR)
+        ref_audio, _ = self._resample(ref_audio, ref_sr, TARGET_SR)
 
         min_len = min(test_audio.shape[-1], ref_audio.shape[-1])
         test_audio = test_audio[..., :min_len]
@@ -123,17 +136,15 @@ class InferenceEngine:
 
         combined = torch.cat([test_audio, ref_audio], dim=0)
         infer_single = self._get_infer_single()
-        scores = infer_single(self._model, self._config, combined, audio_sr=target_sr)
+        scores = infer_single(self._model, self._config, combined, audio_sr=TARGET_SR)
         return {k: float(v) for k, v in scores.items()}
 
     def predict_batch(
         self, pairs: list[tuple[str | Path, str | Path | None]]
     ) -> list[dict[str, float]]:
-        no_ref_paths: list[str] = []
-        no_ref_indices: list[int] = []
-        ref_results: list[dict[str, float] | None] = [None] * len(pairs)
+        results: list[dict[str, float]] = []
 
-        for i, (audio_path, ref_path) in enumerate(pairs):
+        for audio_path, ref_path in pairs:
             audio_path = Path(audio_path)
             if not audio_path.exists():
                 raise FileNotFoundError(f"Audio file not found: {audio_path}")
@@ -142,18 +153,15 @@ class InferenceEngine:
                 ref_path = Path(ref_path)
                 if not ref_path.exists():
                     raise FileNotFoundError(f"Reference file not found: {ref_path}")
-                ref_results[i] = self._predict_with_ref(str(audio_path), str(ref_path))
+                results.append(self._predict_with_ref(str(audio_path), str(ref_path)))
             else:
-                no_ref_paths.append(str(audio_path))
-                no_ref_indices.append(i)
+                audio, sr = self._read_audio(audio_path)
+                audio, sr = self._resample(audio, sr, TARGET_SR)
+                infer_single = self._get_infer_single()
+                scores = infer_single(self._model, self._config, audio, audio_sr=sr)
+                results.append({k: float(v) for k, v in scores.items()})
 
-        if no_ref_paths:
-            infer_list = self._get_infer_list()
-            no_ref_scores = infer_list(self._model, self._config, no_ref_paths)
-            for idx, scores in zip(no_ref_indices, no_ref_scores):
-                ref_results[idx] = {k: float(v) for k, v in scores.items()}
-
-        return ref_results
+        return results
 
     @property
     def device(self) -> str:

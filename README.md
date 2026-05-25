@@ -21,6 +21,8 @@ uv sync --extra dev
 
 That's it. You now have `python`, `pytest`, and the full inference stack ready to go.
 
+**Audio loading** uses `soundfile` (bundles `libsndfile` for all platforms) — no system packages needed.
+
 **Platform note:** `pyproject.toml` registers the [PyTorch CUDA index](https://download.pytorch.org/whl/cu128) alongside PyPI so Linux/Windows users get GPU-capable wheels. On macOS `uv` falls back to PyPI's CPU wheels automatically.
 
 ---

@@ -12,6 +12,7 @@ dependencies = [
     "urgent2026_sqa @ git+https://github.com/urgent-challenge/urgent2026_challenge_track2",
     "torch",
     "torchaudio<2.9",  # must match torch<=2.8 from urgent2026_sqa
+    "soundfile",
     "pandas",
     "matplotlib",
 ]

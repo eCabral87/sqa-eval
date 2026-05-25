@@ -70,8 +70,8 @@ class TestInferenceEngine:
     def test_predict_batch(self, mock_load, sample_audio):
         mock_load.return_value = (MagicMock(), {})
 
-        with patch.object(InferenceEngine, "_get_infer_list") as mock_get:
-            mock_infer = MagicMock(return_value=[dict(MOCK_5_SCORES)])
+        with patch.object(InferenceEngine, "_get_infer_single") as mock_get:
+            mock_infer = MagicMock(return_value=dict(MOCK_5_SCORES))
             mock_get.return_value = mock_infer
 
             engine = InferenceEngine("5metric")
