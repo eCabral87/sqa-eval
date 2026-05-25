@@ -1,13 +1,21 @@
-from sqa_eval import Evaluator, Experiment, InferenceEngine
+"""Smoke test — adapt this file to start using the project."""
 
+from sqa_eval import Experiment
 
-# --- Pit two denoisers against each other ---
+# --- Configuration — edit these to match your setup ---
+EXPERIMENT_NAME = "denoiser-shootout"
+BASE_DIR = "./recordings"
+SYSTEMS = ["dnn_v1", "dnn_v2"]
+REF_DIR = "./recordings/clean_refs"
+MODEL = "22metric"  # "5metric" | "22metric" | "both"
+# -----------------------------------------------------
+
 exp = Experiment(
-    name="denoiser-shootout",
-    base_dir="./recordings",
-    systems=["dnn_v1", "dnn_v2"],
-    ref_dir="./recordings/clean_refs",
-    model="22metric",
+    name=EXPERIMENT_NAME,
+    base_dir=BASE_DIR,
+    systems=SYSTEMS,
+    ref_dir=REF_DIR,
+    model=MODEL,
 )
 exp.run()
 exp.report()

@@ -75,6 +75,8 @@ With `"5metric"` the two scores are identical (only those 5 metrics exist). With
 
 For a deeper dive into every function, implementation details, and more use cases see the [Wiki](https://github.com/eCabral87/sqa-eval/wiki).
 
+You can also adapt `test_smoke.py` — it is a ready-to-run template you can edit with your own directories and model choice.
+
 Open `results/denoiser-shootout/` and you'll find:
 
 ```
