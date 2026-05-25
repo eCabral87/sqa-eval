@@ -199,6 +199,11 @@ class InferenceEngine:
                     raise FileNotFoundError(f"Reference file not found: {ref_path}")
                 results.append(self._predict_with_ref(str(audio_path), str(ref_path)))
             else:
+                if self._needs_ref():
+                    raise ValueError(
+                        f"Model '{self._model_name}' requires reference audio for some metrics. "
+                        "Pass a ref_path or use '5metric' for no-reference evaluation."
+                    )
                 audio, sr = self._read_audio(audio_path)
                 audio, sr = self._resample(audio, sr, TARGET_SR)
                 infer_single = self._get_infer_single()

@@ -162,7 +162,11 @@ scores = engine.predict("degraded.wav", ref_path="clean.wav")
 
 # Batch
 pairs = [("a.wav", None), ("b.wav", "ref_b.wav")]
-all_scores = engine.predict_batch(pairs)
+all_scores = engine.predict_batch(pairs)  # → [{mos: 3.2, ...}, {mos: 3.5, sdr: 12.1, ...}]
+
+# Each result dict contains only the metrics the model computed for that pair.
+# If a model requires a reference (e.g. "22metric") but ref_path is None,
+# predict_batch raises ValueError — it does not silently produce garbage.
 ```
 
 ---
