@@ -2,7 +2,9 @@
 
 **Speech Quality Assessment** — score your audio with neural MOS metrics and rank enhancement algorithms in minutes, not days.
 
-Backed by the [Uni-VERSA-Ext](https://arxiv.org/abs/2506.12260) framework.
+Backed by the [Uni-VERSA-Ext](https://github.com/urgent-challenge/urgent2026_challenge_track2/tree/main) framework.
+
+📄 [Paper](https://arxiv.org/abs/2506.12260) · 🤗 [Hugging Face Models](https://huggingface.co/vvwangvv/)
 
 - **GPU** when available, **CPU** otherwise — auto-detected
 - **Cross-platform** — Windows, Linux, macOS (via `uv`)
@@ -207,3 +209,9 @@ outputs/dnn_v1/
 ```
 
 Files without a matching reference are scored with no-ref metrics only.
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
