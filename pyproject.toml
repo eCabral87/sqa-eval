@@ -51,3 +51,7 @@ url = "https://download.pytorch.org/whl/cu128"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "integration: tests that load the real model and run real inference",
+    "slow: tests that take more than a few seconds to run",
+]

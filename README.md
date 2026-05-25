@@ -184,7 +184,7 @@ src/sqa_eval/
 ```bash
 uv run ruff format src/ tests/    # formatter (black-compatible, just faster)
 uv run ruff check src/ tests/     # linter
-uv run pytest tests/ -v           # 50 tests, no GPU needed
+uv run pytest tests/ -v           # 50 unit tests, no GPU needed
 ```
 
 Or do it all in one go:
@@ -194,6 +194,16 @@ uv run ruff format src/ tests/ && uv run ruff check src/ tests/ && uv run pytest
 ```
 
 Tests mock the framework — no downloads, no GPU, no internet required.
+
+### Integration tests
+
+Full-stack tests that load the real model from HuggingFace and run inference on synthetic audio (generated on the fly):
+
+```bash
+uv run pytest tests/ -m integration -v
+```
+
+These require network access, a GPU (falls back to CPU), and may take several minutes.
 
 ---
 
