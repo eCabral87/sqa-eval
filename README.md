@@ -35,24 +35,43 @@ That's it. You now have `python`, `pytest`, and the full inference stack ready t
 ## In a Nutshell
 
 ```python
-from sqa_eval import Evaluator, Experiment
-
-# --- Score a single file ---
-evaluator = Evaluator("5metric")          # 5 no-reference MOS metrics
-result = evaluator.evaluate_file("sample.wav")
-print(result.common_score)                # → 0.72
+from sqa_eval import Experiment, Evaluator
 
 # --- Pit two denoisers against each other ---
+#
+# Directory layout expected:
+#   recordings/
+#   ├── dnn_v1/
+#   │   ├── sample01.wav
+#   │   └── sample02.wav
+#   └── dnn_v2/
+#       ├── sample01.wav
+#       └── sample02.wav
+#   clean_refs/
+#   ├── REF_sample01.wav        (see Reference Convention below)
+#   └── REF_sample02.wav
+#
 exp = Experiment(
     name="denoiser-shootout",
-    base_dir="./recordings",
-    systems=["dnn_v1", "dnn_v2"],
-    ref_dir="./clean_refs",
-    model="22metric",
+    base_dir="./recordings",          # parent dir containing one subdir per system
+    systems=["dnn_v1", "dnn_v2"],     # system subdirectory names
+    ref_dir="./clean_refs",           # clean references (REF_ prefix matched by stem)
+    model="22metric",                 # "5metric" | "22metric" | "both"
 )
-exp.run()
-exp.report()                              # CSV, JSON, and plots land in results/
+exp.run()                             # scores every file across all systems
+exp.report()                          # CSV, JSON, and plots land in results/
+
+# --- Score a single file ---
+evaluator = Evaluator("5metric")      # 5 no-reference MOS metrics
+result = evaluator.evaluate_file("sample.wav")
+print(result.common_score)            # → 0.72
 ```
+
+Every result gives you two aggregated scores:
+- **`common_score`** — weighted average of only the 5 no-reference MOS metrics (`mos`, `dnsmos_ovrl`, `scoreq`, `utmos`, `nisqa_mos`)
+- **`extended_score`** — weighted average of **all** metrics the model produced
+
+With `"5metric"` the two scores are identical (only those 5 metrics exist). With `"22metric"` they diverge because `extended_score` also includes SDR, PESQ, MCD, LSD, speaker similarity, etc.
 
 Open `results/denoiser-shootout/` and you'll find:
 
