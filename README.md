@@ -224,7 +224,3 @@ outputs/dnn_v1/
 Files without a matching reference are scored with no-ref metrics only.
 
 ---
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
