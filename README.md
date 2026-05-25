@@ -10,7 +10,7 @@ Backed by the [Uni-VERSA-Ext](https://github.com/urgent-challenge/urgent2026_cha
 - **Cross-platform** — Windows, Linux, macOS (via `uv`)
 - **50 tests** — zero network calls, zero GPU required
   - Validate metric definitions, score aggregation, ranking logic, and file I/O
-  - Mock the inference engine to keep everything fast and offline
+  - Replace the real model with fake objects via `unittest.mock` so no model is ever downloaded or loaded
   - Verify experiment orchestration and report generation end-to-end
 
 ---
