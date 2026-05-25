@@ -73,6 +73,8 @@ Every result gives you two aggregated scores:
 
 With `"5metric"` the two scores are identical (only those 5 metrics exist). With `"22metric"` they diverge because `extended_score` also includes SDR, PESQ, MCD, LSD, speaker similarity, etc.
 
+For a deeper dive into every function, implementation details, and more use cases see the [Wiki](https://github.com/eCabral87/sqa-eval/wiki).
+
 Open `results/denoiser-shootout/` and you'll find:
 
 ```
