@@ -9,13 +9,16 @@ Backed by the [Uni-VERSA-Ext](https://github.com/urgent-challenge/urgent2026_cha
 - **GPU** when available, **CPU** otherwise — auto-detected
 - **Cross-platform** — Windows, Linux, macOS (via `uv`)
 - **50 tests** — zero network calls, zero GPU required
+  - Validate metric definitions, score aggregation, ranking logic, and file I/O
+  - Mock the inference engine to keep everything fast and offline
+  - Ensure cross-platform reproducibility of MOS scores
 
 ---
 
 ## Setup
 
 ```bash
-git clone <repo-url> && cd eval-sqa-speech
+git clone https://github.com/eCabral87/sqa-eval.git && cd eval-sqa-speech
 
 # One command, handles Python, virtualenv, and all deps:
 uv sync --extra dev
