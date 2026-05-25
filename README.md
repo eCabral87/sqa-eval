@@ -100,15 +100,19 @@ CUDA_VISIBLE_DEVICES="" uv run python my_script.py
 
 ## Score Aggregation
 
-The library implements Equation (2) from the Uni-VERSA-Ext paper:
+After the model produces raw metric scores (each on its own scale), the library normalises them into a single `[0, 1]` score:
+
+1. **Normalise** — each raw score `s_k` is mapped to `[0, 1]` via min–max over its known range (e.g. MOS `[1,5]` → `(s-1)/4`; SDR `[-30,30]` → `(s+30)/60`)
+2. **Flip lower-is-better** — metrics with `direction = -1` (MCD, LSD) become `1.0 - norm_val` so **1.0 is always best**
+3. **Weighted average** — the final score is a weighted average, not a sum:
 
 ```
-L_score = Σ w_k × direction_k × normalize(s_k)
+score = ( Σ w_k × norm_val_k ) / Σ w_k
 ```
 
-- Each metric is mapped to [0, 1] using its known min/max range
-- Lower-is-better metrics (MCD, LSD) are flipped so they contribute positively
-- User-configurable weights let you emphasise what matters (default: equal)
+Dividing by the total weight keeps the result in `[0, 1]` regardless of how many metrics contributed or what weights are set, making scores comparable across experiments.
+
+**Weights**: each metric has a default weight of `1.0`, but you can pass custom per-metric weights to `Evaluator(model, weights={"sdr": 2.0, "mos": 0.5})`.
 
 ---
 
