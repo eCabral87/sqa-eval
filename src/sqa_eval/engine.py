@@ -12,6 +12,15 @@ TARGET_SR = 16000
 
 class InferenceEngine:
     def __init__(self, model: str = "5metric"):
+        """Load a Uni-VERSA-Ext model for inference.
+
+        Parameters
+        ----------
+        model : str, default "5metric"
+            Model alias (``"5metric"`` or ``"22metric"``) or a full
+            HuggingFace repo ID (e.g. ``"org/custom-model"``). Auto-detects
+            CUDA; falls back to CPU.
+        """
         self._resolve_model(model)
         self._device = self._detect_device()
         self._model, self._config = self._load()
@@ -98,6 +107,29 @@ class InferenceEngine:
     def predict(
         self, audio_path: str | Path, ref_path: str | Path | None = None
     ) -> dict[str, float]:
+        """Run inference on a single audio file.
+
+        Parameters
+        ----------
+        audio_path : str | Path
+            Path to the degraded / test audio file.
+        ref_path : str | Path | None, optional
+            Path to a clean reference file. Required when the model
+            needs reference-based metrics (``"22metric"`` or custom).
+
+        Returns
+        -------
+        dict[str, float]
+            Raw per-metric scores keyed by metric name (e.g.
+            ``{"mos": 3.2, "sdr": 12.5, ...}``).
+
+        Raises
+        ------
+        FileNotFoundError
+            If ``audio_path`` or ``ref_path`` doesn't exist.
+        ValueError
+            If the model requires a reference but none was given.
+        """
         audio_path = Path(audio_path)
         if not audio_path.exists():
             raise FileNotFoundError(f"Audio file not found: {audio_path}")
@@ -142,6 +174,18 @@ class InferenceEngine:
     def predict_batch(
         self, pairs: list[tuple[str | Path, str | Path | None]]
     ) -> list[dict[str, float]]:
+        """Run inference on multiple audio files.
+
+        Parameters
+        ----------
+        pairs : list[tuple[str | Path, str | Path | None]]
+            List of ``(audio_path, ref_path_or_None)`` tuples.
+
+        Returns
+        -------
+        list[dict[str, float]]
+            Raw per-metric scores, one dict per input pair.
+        """
         results: list[dict[str, float]] = []
 
         for audio_path, ref_path in pairs:
@@ -165,10 +209,12 @@ class InferenceEngine:
 
     @property
     def device(self) -> str:
+        """Device the model is running on: ``"cuda"`` or ``"cpu"``."""
         return self._device
 
     @property
     def model_name(self) -> str:
+        """Model alias or HF repo ID that was passed at init."""
         return self._model_name
 
     @property

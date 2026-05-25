@@ -13,6 +13,18 @@ from sqa_eval.reporter import Reporter
 
 class Evaluator:
     def __init__(self, model: str = "5metric", weights: dict[str, float] | None = None):
+        """Score a single file, a directory, or export results.
+
+        Parameters
+        ----------
+        model : str, default "5metric"
+            Model alias or HF repo ID. One of ``"5metric"``, ``"22metric"``,
+            ``"both"``, or any HuggingFace repo ID (e.g.
+            ``"org/custom-model"``).
+        weights : dict[str, float] | None, optional
+            Per-metric weight overrides, e.g. ``{"sdr": 2.0, "mos": 0.5}``.
+            ``None`` uses each metric's default weight (1.0).
+        """
         self._model = model
         self._weights = weights
 
@@ -36,6 +48,23 @@ class Evaluator:
         ref_path: str | Path | None = None,
         system: str = "default",
     ) -> AggregateResult:
+        """Score a single audio file.
+
+        Parameters
+        ----------
+        audio_path : str | Path
+            Path to the audio file to evaluate.
+        ref_path : str | Path | None, optional
+            Path to a clean reference file. Required for ``22metric``
+            metrics that need a reference (SDR, PESQ, MCD, LSD, etc.).
+        system : str, default "default"
+            System label used in reports and plots.
+
+        Returns
+        -------
+        AggregateResult
+            Aggregated scores (common, extended) plus raw per-metric values.
+        """
         audio_path = Path(audio_path)
 
         if self._engine_22 is not None and ref_path is not None:
@@ -63,6 +92,23 @@ class Evaluator:
         ref_dir: str | Path | None = None,
         recursive: bool = False,
     ) -> list[AggregateResult]:
+        """Score every audio file in a directory.
+
+        Parameters
+        ----------
+        audio_dir : str | Path
+            Directory containing audio files to evaluate.
+        ref_dir : str | Path | None, optional
+            Directory with ``REF_*`` reference files. References are
+            matched by stem to files in ``audio_dir``.
+        recursive : bool, default False
+            If ``True``, recurse into subdirectories.
+
+        Returns
+        -------
+        list[AggregateResult]
+            One result per audio file found.
+        """
         files = scan_audio(audio_dir, recursive=recursive)
         if not files:
             return []
@@ -81,9 +127,27 @@ class Evaluator:
         return results
 
     def to_csv(self, results: list[AggregateResult], path: str | Path):
+        """Export results to CSV.
+
+        Parameters
+        ----------
+        results : list[AggregateResult]
+            Results from :meth:`evaluate_file` or :meth:`evaluate_directory`.
+        path : str | Path
+            Output CSV file path.
+        """
         Reporter(results).to_csv(path)
 
     def to_json(self, results: list[AggregateResult], path: str | Path):
+        """Export results to JSON.
+
+        Parameters
+        ----------
+        results : list[AggregateResult]
+            Results from :meth:`evaluate_file` or :meth:`evaluate_directory`.
+        path : str | Path
+            Output JSON file path.
+        """
         Reporter(results).to_json(path)
 
 
@@ -98,6 +162,27 @@ class Experiment:
         weights: dict[str, float] | None = None,
         output_dir: str | Path | None = None,
     ):
+        """Compare multiple systems in a single run.
+
+        Parameters
+        ----------
+        name : str
+            Experiment name (used as output subdirectory name).
+        base_dir : str | Path
+            Parent directory containing one subdirectory per system.
+        systems : list[str]
+            System subdirectory names, e.g. ``["dnn_v1", "dnn_v2"]``.
+        ref_dir : str | Path | None, optional
+            Directory with ``REF_*`` reference files.
+        model : str, default "both"
+            Model alias or HF repo ID. ``"both"`` runs both
+            ``5metric`` and ``22metric`` models.
+        weights : dict[str, float] | None, optional
+            Per-metric weight overrides.
+        output_dir : str | Path | None, optional
+            Output directory for reports and plots. Defaults to
+            ``<base_dir>/../results/<name>/``.
+        """
         self.name = name
         self.base_dir = Path(base_dir)
         self.systems = systems
@@ -115,6 +200,16 @@ class Experiment:
         return self._results
 
     def run(self) -> list[AggregateResult]:
+        """Run the experiment: score all files across all systems.
+
+        Iterates over every audio file in each system directory, scores
+        it via :class:`Evaluator`, and collects the results.
+
+        Returns
+        -------
+        list[AggregateResult]
+            All per-file results from every system.
+        """
         system_files = resolve_experiment(self.base_dir, self.systems)
         for sys_name, files in system_files.items():
             if not files:
@@ -147,6 +242,16 @@ class Experiment:
         return self._results
 
     def report(self):
+        """Export all results to CSV, JSON, and plots.
+
+        Writes to :attr:`output_dir`:
+          - ``scores.csv`` — per-file scores
+          - ``summary.csv`` — per-system statistics
+          - ``ranking.csv`` — systems ordered by mean common score
+          - ``results.json`` — full data
+          - ``bar_common_score.png``, ``box_common_score.png``,
+            ``radar.png``, ``scatter_*.png`` — visualisations
+        """
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         reporter = Reporter(self._results)
