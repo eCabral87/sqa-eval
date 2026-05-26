@@ -110,6 +110,11 @@ class Plotter:
                 scores_b[r.file_name] = val
 
         common = sorted(set(scores_a) & set(scores_b))
+        if not common:
+            fig, ax = plt.subplots(figsize=(8, 8))
+            ax.text(0.5, 0.5, f"No common files between {system_a} and {system_b}", ha="center", va="center")
+            return self._save_or_return(fig, path)
+
         xs = [scores_a[f] for f in common]
         ys = [scores_b[f] for f in common]
 
