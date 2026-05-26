@@ -10,7 +10,7 @@ from sqa_eval.aggregator import AggregateResult, compare_systems, rank_systems
 
 class Reporter:
     def __init__(self, results: list[AggregateResult]):
-        self._results = results
+        self._results = sorted(results, key=lambda r: r.common_score, reverse=True)
 
     @property
     def results(self) -> list[AggregateResult]:
