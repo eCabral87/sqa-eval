@@ -72,6 +72,10 @@ For a deeper dive into every function, implementation details, and more use case
 
 You can also adapt `test_smoke.py` — it is a ready-to-run template you can edit with your own directories and model choice.
 
+```bash
+uv run test_smoke.py
+```
+
 Open `results/denoiser-shootout/` and you'll find:
 
 ```
