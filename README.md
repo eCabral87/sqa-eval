@@ -35,7 +35,7 @@ That's it. You now have `python`, `pytest`, and the full inference stack ready t
 ## In a Nutshell
 
 ```python
-from sqa_eval import Experiment, Evaluator
+from sqa_eval import Experiment
 
 # --- Pit two denoisers against each other ---
 #
@@ -60,11 +60,6 @@ exp = Experiment(
 )
 exp.run()                             # scores every file across all systems
 exp.report()                          # CSV, JSON, and plots land in results/
-
-# --- Score a single file ---
-evaluator = Evaluator("5metric")      # 5 no-reference MOS metrics
-result = evaluator.evaluate_file("sample.wav")
-print(result.common_score)            # → 0.72
 ```
 
 Every result gives you two aggregated scores:
@@ -89,6 +84,15 @@ results/denoiser-shootout/
 ├── box_common_score.png
 ├── radar.png
 └── scatter_dnn_v1_vs_dnn_v2.png
+```
+
+```python
+from sqa_eval import Evaluator
+
+# --- Score a single file ---
+evaluator = Evaluator("5metric")      # 5 no-reference MOS metrics
+result = evaluator.evaluate_file("sample.wav")
+print(result.common_score)            # → 0.72
 ```
 
 ---
