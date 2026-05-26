@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "sqa-eval"
 version = "0.1.0"
 description = "Speech Quality Assessment evaluation library using Uni-VERSA-Ext"
-requires-python = ">=3.10"
+requires-python = ">=3.10, <3.14"
 license = { text = "MIT" }
 dependencies = [
     "urgent2026_sqa @ git+https://github.com/urgent-challenge/urgent2026_challenge_track2",
@@ -41,13 +41,6 @@ select = ["E", "F", "I", "W"]
 quote-style = "double"
 indent-style = "space"
 docstring-code-format = true
-
-[tool.uv]
-index-strategy = "unsafe-best-match"
-
-[[tool.uv.index]]
-name = "pytorch"
-url = "https://download.pytorch.org/whl/cu128"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

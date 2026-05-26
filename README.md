@@ -18,7 +18,7 @@ Backed by the [Uni-VERSA-Ext](https://github.com/urgent-challenge/urgent2026_cha
 ## Setup
 
 ```bash
-git clone https://github.com/eCabral87/sqa-eval.git && cd eval-sqa-speech
+git clone https://github.com/eCabral87/sqa-eval.git && cd sqa-eval
 
 # One command, handles Python, virtualenv, and all deps:
 uv sync --extra dev
@@ -28,7 +28,17 @@ That's it. You now have `python`, `pytest`, and the full inference stack ready t
 
 **Audio loading** uses `soundfile` (bundles `libsndfile` for all platforms) — no system packages needed.
 
-**Platform note:** `pyproject.toml` registers the [PyTorch CUDA index](https://download.pytorch.org/whl/cu128) alongside PyPI so Linux/Windows users get GPU-capable wheels. On macOS `uv` falls back to PyPI's CPU wheels automatically.
+**CPU (all platforms):**
+
+```bash
+uv sync --extra dev
+```
+
+**GPU (Linux/Windows with NVIDIA):**
+
+```bash
+uv sync --extra dev --extra-index-url https://download.pytorch.org/whl/cu128
+```
 
 ---
 
