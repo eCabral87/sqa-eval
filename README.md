@@ -77,6 +77,7 @@ Every result gives you two aggregated scores:
 - **`extended_score`** — weighted average of **all** metrics the model produced
 
 With `"5metric"` the two scores are identical (only those 5 metrics exist). With `"22metric"` they diverge because `extended_score` also includes SDR, PESQ, MCD, LSD, speaker similarity, etc.
+Use `"both"` when your dataset mixes files with and without references. Files that have a matching reference are scored with `"22metric"` (all metrics), while files without a reference fall back to `"5metric"` (no-reference metrics only).
 
 For a deeper dive into every function, implementation details, and more use cases see the [Wiki](https://github.com/eCabral87/sqa-eval/wiki).
 
@@ -164,7 +165,7 @@ Dividing by the total weight keeps the result in `[0, 1]` regardless of how many
 ```python
 from sqa_eval import Evaluator
 
-e = Evaluator(model="5metric")
+e = Evaluator(model="22metric")
 
 result = e.evaluate_file("noisy.wav")                       # single file
 results = e.evaluate_directory("./speech/", ref_dir="./refs/")  # whole folder
