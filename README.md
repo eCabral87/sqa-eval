@@ -8,10 +8,6 @@ Backed by the [Uni-VERSA-Ext](https://github.com/urgent-challenge/urgent2026_cha
 
 - **GPU** when available, **CPU** otherwise — auto-detected
 - **Cross-platform** — Windows, Linux, macOS (via `uv`)
-- **50 tests** — zero network calls, zero GPU required
-  - Validate metric definitions, score aggregation, ranking logic, and file I/O
-  - Replace the real model with fake objects via `unittest.mock` so no model is ever downloaded or loaded
-  - Verify experiment orchestration and report generation end-to-end
 
 ---
 
@@ -21,6 +17,7 @@ For reliable and subjectively correlated scores, test files should meet the foll
 
 - **Duration** — [Uni-VERSA-Ext](https://github.com/urgent-challenge/urgent2026_challenge_track2/tree/main) works best with short files (10–20 s). Longer files do not necessarily yield better results.
 - **Content** — Files should contain continuous speech without prolonged silence gaps between speech sections. See the `assets/` folder in the Uni-VERSA-Ext repository for examples. Following this guideline keeps the evaluation focused on speech quality and improves correlation with subjective ratings. Long silence gaps can mislead scores, especially for no-reference (non-intrusive) metrics.
+- **Avoid** — Avoid using files generated artificially using extreme data augmentation. In these cases the model might fail to produce right scores.
 - **Metric selection** — Review the metric descriptions in the [paper](https://arxiv.org/abs/2506.12260) (Section II-B, particularly Table 1) and choose the metrics that best match your requirements. Give more weight to them in the evaluation. See Score Aggregation for more details.
 
 ---
