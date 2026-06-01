@@ -17,7 +17,7 @@ For reliable and subjectively correlated scores, test files should meet the foll
 
 - **Duration** — [Uni-VERSA-Ext](https://github.com/urgent-challenge/urgent2026_challenge_track2/tree/main) works best with short files (10–20 s). Longer files do not necessarily yield better results.
 - **Content** — Files should contain continuous speech without prolonged silence gaps between speech sections. See the `assets/` folder in the Uni-VERSA-Ext repository for examples. Following this guideline keeps the evaluation focused on speech quality and improves correlation with subjective ratings. Long silence gaps can mislead scores, especially for no-reference (non-intrusive) metrics.
-- **Avoid** — Avoid using files generated artificially using extreme data augmentation. In these cases the model might fail to produce right scores.
+- **Avoid** — Extreme data augmentation can mislead the model and produce unreliable scores.
 - **Metric selection** — Review the metric descriptions in the [paper](https://arxiv.org/abs/2506.12260) (Section II-B, particularly Table 1) and choose the metrics that best match your requirements. Give more weight to them in the evaluation. See Score Aggregation for more details.
 
 ---
@@ -159,7 +159,7 @@ After the model produces raw metric scores (each on its own scale), the library 
 score = ( Σ w_k × norm_val_k ) / Σ w_k
 ```
 
-Dividing by the total weight keeps the result in `[0, 1]` regardless of how many metrics contributed or what weights are set, making scores comparable across experiments.
+Dividing by the total weight keeps the result in `[0, 1]` regardless of how many metrics contributed or what weights are set, making scores comparable across experiments. This combined score works similarly to the PRISM score proposed in [this paper](https://arxiv.org/abs/2512.16420).
 
 **Weights**: each metric has a default weight of `1.0`, but you can pass custom per-metric weights to `Evaluator(model, weights={"sdr": 2.0, "mos": 0.5})`.
 
