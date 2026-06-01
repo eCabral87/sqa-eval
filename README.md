@@ -132,7 +132,7 @@ All evaluation functionality is also available from the command line. After `uv 
 uv run sqa-eval --help
 
 # Score a single file
-uv run sqa-eval evaluate speech.wav --ref clean.wav --model 5metric
+uv run sqa-eval evaluate speech.wav --ref clean.wav --model 22metric
 
 # Score a directory
 uv run sqa-eval evaluate-dir ./noisy --ref-dir ./clean --model 22metric --output-csv scores.csv

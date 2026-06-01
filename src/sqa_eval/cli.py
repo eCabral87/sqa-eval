@@ -4,6 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from sqa_eval.banner import print_banner
 from sqa_eval.experiment import Evaluator, Experiment
 
 
@@ -84,6 +85,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _cmd_evaluate(args: argparse.Namespace) -> int:
+    print_banner(model_name=args.model)
     if not args.audio.exists():
         print(f"Error: audio file not found: {args.audio}", file=sys.stderr)
         return 2
@@ -110,6 +112,7 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
 
 
 def _cmd_evaluate_dir(args: argparse.Namespace) -> int:
+    print_banner(model_name=args.model)
     if not args.audio_dir.is_dir():
         print(f"Error: audio directory not found: {args.audio_dir}", file=sys.stderr)
         return 2
@@ -140,6 +143,7 @@ def _cmd_evaluate_dir(args: argparse.Namespace) -> int:
 
 
 def _cmd_experiment(args: argparse.Namespace) -> int:
+    print_banner(model_name=args.model)
     systems = [s.strip() for s in args.systems.split(",")]
 
     experiment = Experiment(
