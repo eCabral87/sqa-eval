@@ -17,6 +17,9 @@ dependencies = [
     "matplotlib",
 ]
 
+[project.scripts]
+sqa-eval = "sqa_eval.cli:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8",

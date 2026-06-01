@@ -53,7 +53,7 @@ uv sync --extra dev --extra-index-url https://download.pytorch.org/whl/cu128
 
 ---
 
-## In a Nutshell
+## Python API in a Nutshell
 
 ```python
 from sqa_eval import Experiment
@@ -123,6 +123,28 @@ print(result.common_score)            # → 0.72
 
 ---
 
+## CLI API in a Nutshell
+
+All evaluation functionality is also available from the command line. After `uv sync`, run:
+
+```bash
+# Show available commands
+uv run sqa-eval --help
+
+# Score a single file
+uv run sqa-eval evaluate speech.wav --ref clean.wav --model 5metric
+
+# Score a directory
+uv run sqa-eval evaluate-dir ./noisy --ref-dir ./clean --model 22metric --output-csv scores.csv
+
+# Compare multiple systems (full report + plots)
+uv run sqa-eval experiment denoiser-shootout ./recordings --systems dnn_v1,dnn_v2 --ref-dir ./clean_refs --model both
+```
+
+You can also use `python -m sqa_eval` instead of `uv run sqa-eval`.
+
+The experiment command generates the same CSV, JSON, and plot outputs as the Python API.
+
 ## Models
 
 | Alias | HF Repo | # Metrics | Needs Clean Ref? |
@@ -169,7 +191,7 @@ Dividing by the total weight keeps the result in `[0, 1]` regardless of how many
 
 ---
 
-## API Tour
+## Python API Tour
 
 ### `Evaluator` — one file or one folder
 
@@ -229,6 +251,8 @@ all_scores = engine.predict_batch(pairs)  # → [{mos: 3.2, ...}, {mos: 3.5, sdr
 ```
 src/sqa_eval/
 ├── __init__.py      # public API
+├── __main__.py      # python -m sqa_eval entry point
+├── cli.py           # sqa-eval CLI (evaluate, evaluate-dir, experiment)
 ├── metrics.py       # MetricDef, METRICS_5, METRICS_22
 ├── engine.py        # InferenceEngine (wraps Uni-VERSA-Ext)
 ├── aggregator.py    # ScoreAggregator + system ranking
