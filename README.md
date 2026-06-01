@@ -1,5 +1,9 @@
 # sqa-eval
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/eCabral87/sqa-eval/main/assets/sqa-eval-banner.png" alt="SQA-Eval Banner">
+</p>
+
 **Speech Quality Assessment** — score your audio with neural MOS metrics and rank enhancement algorithms in minutes, not days.
 
 Backed by the [Uni-VERSA-Ext](https://github.com/urgent-challenge/urgent2026_challenge_track2/tree/main) framework.
