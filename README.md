@@ -21,6 +21,7 @@ For reliable and subjectively correlated scores, test files should meet the foll
 
 - **Duration** — [Uni-VERSA-Ext](https://github.com/urgent-challenge/urgent2026_challenge_track2/tree/main) works best with short files (10–20 s). Longer files do not necessarily yield better results.
 - **Content** — Files should contain continuous speech without prolonged silence gaps between speech sections. See the `assets/` folder in the Uni-VERSA-Ext repository for examples. Following this guideline keeps the evaluation focused on speech quality and improves correlation with subjective ratings. Long silence gaps can mislead scores, especially for no-reference (non-intrusive) metrics.
+- **Automatic preprocessing** — Pass `--preprocess` to automatically remove silence gaps via a Silero VAD before scoring. Speech segments are extracted, concatenated with 50ms noise guards (sampled from non-speech regions of the file), and capped at 1-minute chunks (scores are averaged across chunks). This is useful for long recordings with silence between utterances. See the CLI section below for usage.
 - **Avoid** — Extreme data augmentation can mislead the model and produce unreliable scores.
 - **Metric selection** — Review the metric descriptions in the [paper](https://arxiv.org/abs/2506.12260) (Section II-B, particularly Table 1) and choose the metrics that best match your requirements. Give more weight to them in the evaluation. See Score Aggregation for more details.
 
@@ -134,11 +135,20 @@ uv run sqa-eval --help
 # Score a single file
 uv run sqa-eval evaluate speech.wav --ref clean.wav --model 22metric
 
+# Score a single file with VAD preprocessing (removes silence gaps)
+uv run sqa-eval evaluate speech.wav --model 5metric --preprocess
+
 # Score a directory
 uv run sqa-eval evaluate-dir ./noisy --ref-dir ./clean --model 22metric --output-csv scores.csv
 
+# Score a directory with preprocessing
+uv run sqa-eval evaluate-dir ./noisy --model 5metric --preprocess --output-csv scores.csv
+
 # Compare multiple systems (full report + plots)
 uv run sqa-eval experiment denoiser-shootout ./recordings --systems dnn_v1,dnn_v2 --ref-dir ./clean_refs --model both
+
+# Compare multiple systems with preprocessing (applied to no-reference scoring)
+uv run sqa-eval experiment denoiser-shootout ./recordings --systems dnn_v1,dnn_v2 --model 5metric --preprocess
 ```
 
 You can also use `python -m sqa_eval` instead of `uv run sqa-eval`.
@@ -205,6 +215,10 @@ results = e.evaluate_directory("./speech/", ref_dir="./refs/")  # whole folder
 
 e.to_csv(results, "scores.csv")
 e.to_json(results, "results.json")
+
+# With VAD preprocessing (removes silence gaps before scoring)
+e2 = Evaluator(model="5metric", preprocess=True)
+result = e2.evaluate_file("long_recording.wav")
 ```
 
 ### `Experiment` — multi-system comparison
@@ -257,6 +271,7 @@ src/sqa_eval/
 ├── engine.py        # InferenceEngine (wraps Uni-VERSA-Ext)
 ├── aggregator.py    # ScoreAggregator + system ranking
 ├── io.py            # scan_audio, match_references, resolve_experiment
+├── preprocess.py    # Silero VAD-based speech extraction (--preprocess)
 ├── reporter.py      # CSV / JSON / summary table exports
 ├── plotter.py       # bar, box, scatter, radar charts
 └── experiment.py    # Evaluator + Experiment high-level API
@@ -269,7 +284,7 @@ src/sqa_eval/
 ```bash
 uv run ruff format src/ tests/    # formatter (black-compatible, just faster)
 uv run ruff check src/ tests/     # linter
-uv run pytest tests/ -v           # 50 unit tests, no GPU needed
+uv run pytest tests/ -v           # 74 unit tests, no GPU needed
 ```
 
 Or do it all in one go:

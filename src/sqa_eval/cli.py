@@ -27,6 +27,9 @@ def _build_parser() -> argparse.ArgumentParser:
         default="5metric",
         help="Model alias ('5metric', '22metric') or HF repo ID.",
     )
+    p_eval.add_argument(
+        "--preprocess", action="store_true", help="Remove silence gaps via VAD before scoring."
+    )
     p_eval.add_argument("--system", default="default", help="System label for reports.")
     p_eval.add_argument(
         "--output-csv", type=Path, default=None, help="Export per-file scores to CSV."
@@ -47,6 +50,9 @@ def _build_parser() -> argparse.ArgumentParser:
         "--model",
         default="5metric",
         help="Model alias ('5metric', '22metric') or HF repo ID.",
+    )
+    p_dir.add_argument(
+        "--preprocess", action="store_true", help="Remove silence gaps via VAD before scoring."
     )
     p_dir.add_argument("--recursive", action="store_true", help="Recurse into subdirectories.")
     p_dir.add_argument(
@@ -80,6 +86,9 @@ def _build_parser() -> argparse.ArgumentParser:
     p_exp.add_argument(
         "--output-dir", type=Path, default=None, help="Output directory for reports and plots."
     )
+    p_exp.add_argument(
+        "--preprocess", action="store_true", help="Remove silence gaps via VAD before scoring."
+    )
 
     return parser
 
@@ -94,7 +103,7 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
         print(f"Error: reference file not found: {args.ref}", file=sys.stderr)
         return 2
 
-    evaluator = Evaluator(model=args.model)
+    evaluator = Evaluator(model=args.model, preprocess=args.preprocess)
     result = evaluator.evaluate_file(args.audio, ref_path=args.ref, system=args.system)
     results = [result]
 
@@ -117,7 +126,7 @@ def _cmd_evaluate_dir(args: argparse.Namespace) -> int:
         print(f"Error: audio directory not found: {args.audio_dir}", file=sys.stderr)
         return 2
 
-    evaluator = Evaluator(model=args.model)
+    evaluator = Evaluator(model=args.model, preprocess=args.preprocess)
     results = evaluator.evaluate_directory(
         args.audio_dir,
         ref_dir=args.ref_dir,
@@ -153,6 +162,7 @@ def _cmd_experiment(args: argparse.Namespace) -> int:
         ref_dir=args.ref_dir,
         model=args.model,
         output_dir=args.output_dir,
+        preprocess=args.preprocess,
     )
 
     results = experiment.run()
