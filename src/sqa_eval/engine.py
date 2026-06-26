@@ -5,6 +5,8 @@ import warnings
 from pathlib import Path
 from typing import Any
 
+import torch
+
 from sqa_eval.metrics import MODEL_ALIASES
 
 TARGET_SR = 16000
@@ -103,6 +105,48 @@ class InferenceEngine:
         from urgent2026_sqa.infer import infer_single
 
         return infer_single
+
+    def predict_from_tensor(
+        self,
+        audio: torch.Tensor,
+        sr: int,
+        ref_audio: torch.Tensor | None = None,
+    ) -> dict[str, float]:
+        """Run inference on a pre-loaded audio tensor.
+
+        Parameters
+        ----------
+        audio : torch.Tensor
+            Audio tensor of shape ``(1, samples)`` at the model's target
+            sample rate (``TARGET_SR``).
+        sr : int
+            Sample rate of ``audio``.
+        ref_audio : torch.Tensor | None, optional
+            Reference audio tensor of shape ``(1, samples)``. Required when
+            the model needs reference-based metrics.
+
+        Returns
+        -------
+        dict[str, float]
+            Raw per-metric scores.
+        """
+        if audio.shape[-1] == 0:
+            raise ValueError("Empty audio tensor")
+
+        if ref_audio is not None:
+            if ref_audio.shape[-1] == 0:
+                raise ValueError("Empty reference audio tensor")
+            min_len = min(audio.shape[-1], ref_audio.shape[-1])
+            audio = audio[..., :min_len]
+            ref_audio = ref_audio[..., :min_len]
+            combined = torch.cat([audio, ref_audio], dim=0)
+            infer_single = self._get_infer_single()
+            scores = infer_single(self._model, self._config, combined, audio_sr=sr)
+        else:
+            infer_single = self._get_infer_single()
+            scores = infer_single(self._model, self._config, audio, audio_sr=sr)
+
+        return {k: float(v) for k, v in scores.items()}
 
     def predict(
         self, audio_path: str | Path, ref_path: str | Path | None = None

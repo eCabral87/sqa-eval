@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import warnings
 from pathlib import Path
 
@@ -8,11 +9,17 @@ from sqa_eval.engine import InferenceEngine
 from sqa_eval.io import match_experiment_refs, resolve_experiment, scan_audio
 from sqa_eval.metrics import METRICS_5, METRICS_22
 from sqa_eval.plotter import Plotter
+from sqa_eval.preprocess import Preprocessor
 from sqa_eval.reporter import Reporter
 
 
 class Evaluator:
-    def __init__(self, model: str = "5metric", weights: dict[str, float] | None = None):
+    def __init__(
+        self,
+        model: str = "5metric",
+        weights: dict[str, float] | None = None,
+        preprocess: bool = False,
+    ):
         """Score a single file, a directory, or export results.
 
         Parameters
@@ -24,9 +31,15 @@ class Evaluator:
         weights : dict[str, float] | None, optional
             Per-metric weight overrides, e.g. ``{"sdr": 2.0, "mos": 0.5}``.
             ``None`` uses each metric's default weight (1.0).
+        preprocess : bool, default False
+            If ``True``, run VAD-based speech extraction on test files before
+            scoring to remove silence gaps. Only applies to no-reference
+            evaluation (no ``ref_path``).
         """
         self._model = model
         self._weights = weights
+        self._preprocess = preprocess
+        self._preprocessor: Preprocessor | None = Preprocessor() if preprocess else None
 
         self._engine_5 = None
         self._engine_22 = None
@@ -73,6 +86,8 @@ class Evaluator:
             return agg.evaluate(audio_path.name, system, "22metric", scores_22)
 
         if self._engine_22 is not None:
+            if self._preprocess:
+                return self._evaluate_preprocessed(audio_path, system, self._engine_5)
             scores_5 = self._engine_5.predict(audio_path)
             agg = ScoreAggregator(METRICS_5, self._weights)
             return agg.evaluate(audio_path.name, system, "5metric", scores_5)
@@ -82,9 +97,40 @@ class Evaluator:
             agg = self._get_aggregator(self._engine_5.model_name)
             return agg.evaluate(audio_path.name, system, self._engine_5.model_name, scores)
         else:
+            if self._preprocess:
+                return self._evaluate_preprocessed(audio_path, system, self._engine_5)
             scores = self._engine_5.predict(audio_path)
             agg = self._get_aggregator(self._engine_5.model_name)
             return agg.evaluate(audio_path.name, system, self._engine_5.model_name, scores)
+
+    def _evaluate_preprocessed(
+        self, audio_path: Path, system: str, engine: InferenceEngine
+    ) -> AggregateResult:
+        assert self._preprocessor is not None
+        chunks = self._preprocessor.process_file(audio_path)
+
+        all_raw: list[dict[str, float]] = []
+        for chunk, sr in chunks:
+            raw = engine.predict_from_tensor(chunk, sr)
+            all_raw.append(raw)
+
+        avg_raw = self._average_scores(all_raw)
+        agg = self._get_aggregator(engine.model_name)
+        return agg.evaluate(audio_path.name, system, engine.model_name, avg_raw)
+
+    @staticmethod
+    def _average_scores(scores_list: list[dict[str, float]]) -> dict[str, float]:
+        if not scores_list:
+            return {}
+        if len(scores_list) == 1:
+            return scores_list[0]
+        keys = set.union(*[set(s.keys()) for s in scores_list])
+        averaged: dict[str, float] = {}
+        for key in keys:
+            vals = [s.get(key, float("nan")) for s in scores_list]
+            valid = [v for v in vals if not math.isnan(v)]
+            averaged[key] = sum(valid) / len(valid) if valid else float("nan")
+        return averaged
 
     def evaluate_directory(
         self,
@@ -161,6 +207,7 @@ class Experiment:
         model: str = "both",
         weights: dict[str, float] | None = None,
         output_dir: str | Path | None = None,
+        preprocess: bool = False,
     ):
         """Compare multiple systems in a single run.
 
@@ -182,6 +229,9 @@ class Experiment:
         output_dir : str | Path | None, optional
             Output directory for reports and plots. Defaults to
             ``<base_dir>/../results/<name>/``.
+        preprocess : bool, default False
+            If ``True``, run VAD-based speech extraction on test files
+            before scoring.
         """
         self.name = name
         self.base_dir = Path(base_dir)
@@ -189,6 +239,7 @@ class Experiment:
         self.ref_dir = Path(ref_dir) if ref_dir else None
         self.model = model
         self.weights = weights
+        self.preprocess = preprocess
 
         if output_dir is None:
             output_dir = self.base_dir.parent / "results" / name
@@ -220,7 +271,7 @@ class Experiment:
         else:
             ref_mapping = {s: {f: None for f in files} for s, files in system_files.items()}
 
-        evaluator = Evaluator(model=self.model, weights=self.weights)
+        evaluator = Evaluator(model=self.model, weights=self.weights, preprocess=self.preprocess)
 
         all_files = []
         for sys_name, files in system_files.items():
